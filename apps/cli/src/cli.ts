@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { runInit } from "./commands/init.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runReviewCommand } from "./commands/review.js";
-import type { ProviderName } from "./providers/createModel.js";
+import type { ProviderName } from "@coderev/core";
 
 loadDotenv();
 
@@ -114,7 +114,7 @@ Examples:
   # BYOK OpenAI
   $ coderev review owner/repo --provider openai --model gpt-4o-mini
 
-  # BYOK any OpenAI-compatible endpoint (Groq, Ollama, gateway, …)
+  # BYOK any OpenAI-compatible endpoint
   $ coderev review owner/repo --provider custom \\
       --base-url https://api.openai.com/v1 \\
       --api-key "$OPENAI_API_KEY" \\

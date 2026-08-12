@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.next/
 .env
 .env.local
 *.log
@@ -8,3 +9,4 @@ review.md
 review.json
 .coderev/
 *.tsbuildinfo
+.turbo/

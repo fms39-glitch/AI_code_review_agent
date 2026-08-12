@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { ReviewReport } from "../review/schema.js";
-import { renderMarkdown } from "./renderMarkdown.js";
+import { renderMarkdown, type ReviewReport } from "@coderev/core";
 
 export async function writeReport(options: {
   report: ReviewReport;

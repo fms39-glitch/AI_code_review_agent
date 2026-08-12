@@ -43,25 +43,18 @@ There is no account system and no stored history. Each run is independent.
 
 | Path | Role |
 |------|------|
-| `src/cli.ts` | Entry point. Registers `init`, `doctor`, `review`, loads `.env` |
-| `src/commands/init.ts` | Writes `.env.example` and prints next commands |
-| `src/commands/doctor.ts` | Checks Node, keys, GitHub rate limit |
-| `src/commands/review.ts` | Orchestrates one full review run |
-| `src/providers/createModel.ts` | Turns flags/env into an OpenAI-compatible model client |
-| `src/github/fetchRepo.ts` | Parse repo URL, list tree, fetch file contents |
-| `src/review/selectFiles.ts` | Ignore junk, apply `--path` / `--ext` / size / max-files |
-| `src/review/chunk.ts` | Pack files into character-budget batches |
-| `src/review/schema.ts` | Zod schema for scores + findings |
-| `src/review/runReview.ts` | Prompt + LLM calls + aggregate report |
-| `src/output/renderMarkdown.ts` | Terminal + markdown rendering |
-| `src/output/writeReport.ts` | Write `--out` / `--json` files |
-| `dist/cli.js` | Built binary (`npm run build`) exposed as `coderev` |
+| `apps/cli` | Commander CLI (`init`, `doctor`, `review`) |
+| `apps/web` | Next.js UI + `POST /api/review` |
+| `packages/core` | Shared GitHub fetch, providers, chunking, structured review, markdown render |
+| `packages/core/src/pipeline.ts` | `reviewPublicRepo()` orchestration used by CLI + Web |
+| `apps/cli/src/commands/*` | CLI-only UX (doctor/init/write files) |
+| `apps/web/components/*` | Browser form + results UI |
 
 ---
 
 ## How a `review` run works (step by step)
 
-All of this lives mainly in `src/commands/review.ts` and the modules it calls.
+CLI entry is `apps/cli`; shared steps live in `packages/core` (`reviewPublicRepo`). Web uses the same core via `/api/review`.
 
 ### 1. Load local config
 
@@ -71,7 +64,7 @@ CLI flags always win over env when both are set (for key / base URL / model).
 
 ### 2. Resolve the LLM provider **first**
 
-Before any GitHub traffic, `resolveProvider()` in `src/providers/createModel.ts` builds a model client.
+Before any GitHub traffic, `resolveProvider()` in `packages/core/src/providers/createModel.ts` builds a model client.
 
 | `--provider` | Key source | Default base URL | Default model |
 |--------------|------------|------------------|---------------|
@@ -363,3 +356,40 @@ If something fails early:
 - Review quality depends on the model and how tightly you scope `--path` / `--max-files`
 
 For a shorter command-first overview, see [README.md](./README.md).
+
+
+---
+
+## Web app
+
+The web UI lives in `apps/web` and calls the same pipeline through `POST /api/review`.
+
+### Run
+
+```bash
+npm install
+npm run build:core
+npm run dev:web
+```
+
+Open http://localhost:3000
+
+### Request flow
+
+1. Browser form collects repo, provider, optional key, scope filters
+2. `fetch('/api/review')` sends JSON (key is **not** saved to localStorage or a DB)
+3. API route validates with Zod, calls `reviewPublicRepo()` from `@coderev/core`
+4. Response includes structured `report` + `markdown` for download buttons
+
+### Free NIM demo on the server
+
+If the user picks **Nvidia NIM** and leaves the key blank, the API uses `NVIDIA_API_KEY` from `apps/web/.env.local` when present. OpenAI/custom always require a pasted key.
+
+### Where the code lives
+
+| Piece | Path |
+|-------|------|
+| UI | `apps/web/app/page.tsx`, `components/ReviewApp.tsx` |
+| API | `apps/web/app/api/review/route.ts` |
+| Shared logic | `packages/core` |
+| CLI | `apps/cli` |

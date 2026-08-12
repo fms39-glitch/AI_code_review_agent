@@ -2,8 +2,8 @@ import {
   NIM_BASE_URL,
   NIM_DEFAULT_MODEL,
   OPENAI_DEFAULT_MODEL,
-} from "../providers/createModel.js";
-import { checkGitHubRateLimit } from "../github/fetchRepo.js";
+  checkGitHubRateLimit,
+} from "@coderev/core";
 
 function check(ok: boolean, label: string, hint?: string): void {
   const mark = ok ? "OK" : "MISSING";
@@ -89,7 +89,7 @@ export async function runDoctor(options?: {
     );
   } else if (provider === "custom" && customKey && customBase && customModel) {
     console.log(
-      "  coderev review owner/repo --provider custom --base-url \"$BASE_URL\" --model \"$MODEL\"",
+      '  coderev review owner/repo --provider custom --base-url "$BASE_URL" --model "$MODEL"',
     );
   } else if (nimKey) {
     console.log("  coderev review owner/repo --provider nim");

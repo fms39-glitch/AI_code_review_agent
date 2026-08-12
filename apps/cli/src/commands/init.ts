@@ -1,4 +1,4 @@
-import { copyFile, access } from "node:fs/promises";
+import { copyFile, access, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { constants } from "node:fs";
@@ -13,26 +13,14 @@ async function exists(p: string): Promise<boolean> {
 }
 
 function packageRoot(): string {
-  // dist/cli.js → package root; during tsx, src/commands → package root
   const here = path.dirname(fileURLToPath(import.meta.url));
-  // src/commands or dist/
   if (path.basename(here) === "commands") {
     return path.resolve(here, "../..");
   }
   return path.resolve(here, "..");
 }
 
-export async function runInit(): Promise<void> {
-  const root = packageRoot();
-  const exampleSrc = path.join(root, ".env.example");
-  const dest = path.resolve(process.cwd(), ".env.example");
-
-  if (!(await exists(exampleSrc))) {
-    // Fallback inline template if package file missing
-    const { writeFile } = await import("node:fs/promises");
-    await writeFile(
-      dest,
-      `# Nvidia NIM (free)
+const ENV_TEMPLATE = `# Nvidia NIM (free)
 NVIDIA_API_KEY=nvapi-your-key-here
 
 # Optional BYOK
@@ -43,13 +31,20 @@ NVIDIA_API_KEY=nvapi-your-key-here
 
 # Optional GitHub rate limit boost
 # GITHUB_TOKEN=ghp_...
-`,
-      "utf8",
-    );
-  } else if (await exists(dest)) {
+`;
+
+export async function runInit(): Promise<void> {
+  const root = packageRoot();
+  const exampleSrc = path.join(root, ".env.example");
+  const dest = path.resolve(process.cwd(), ".env.example");
+
+  if (await exists(dest)) {
     console.log(`.env.example already exists at ${dest}`);
-  } else {
+  } else if (await exists(exampleSrc)) {
     await copyFile(exampleSrc, dest);
+    console.log(`Wrote ${dest}`);
+  } else {
+    await writeFile(dest, ENV_TEMPLATE, "utf8");
     console.log(`Wrote ${dest}`);
   }
 
@@ -71,7 +66,10 @@ Next steps:
          --api-key "$OPENAI_API_KEY" \\
          --model gpt-4o-mini
 
-  4. See all flags:
+  4. Web UI (from repo root):
+       npm run dev:web
+
+  5. See all flags:
        coderev review --help
 `);
 }
