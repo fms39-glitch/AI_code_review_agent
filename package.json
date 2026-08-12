@@ -12,9 +12,13 @@
     "build:web": "npm run build -w @coderev/web",
     "dev:cli": "npm run dev -w coderev",
     "dev:web": "npm run dev -w @coderev/web",
-    "typecheck": "npm run typecheck -w @coderev/core && npm run typecheck -w coderev && npm run typecheck -w @coderev/web"
+    "typecheck": "npm run typecheck -w @coderev/core && npm run typecheck -w coderev && npm run typecheck -w @coderev/web",
+    "link:cli": "npm run build:core && npm run build:cli && npm link -w coderev"
   },
   "engines": {
     "node": ">=20"
+  },
+  "bin": {
+    "coderev": "apps/cli/dist/cli.js"
   }
 }

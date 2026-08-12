@@ -20,6 +20,15 @@ export interface RunReviewInput {
   verbose?: boolean;
 }
 
+function mergeSummaries(parts: string[]): string {
+  const cleaned = parts.map((p) => p.trim()).filter(Boolean);
+  if (cleaned.length === 0) return "";
+  if (cleaned.length === 1) return cleaned[0];
+  // One short paragraph instead of "Batch 1/2/3..." noise
+  const joined = cleaned.join(" ");
+  return joined.length > 600 ? joined.slice(0, 597) + "..." : joined;
+}
+
 function avgScores(batches: BatchReview[]): Scores {
   if (batches.length === 0) {
     return { quality: 0, performance: 0, security: 0, architecture: 0 };
@@ -146,10 +155,7 @@ export async function runReview(input: RunReviewInput): Promise<ReviewReport> {
   const architectureNotes = [
     ...new Set(batches.flatMap((b) => b.architectureNotes)),
   ];
-  const summary =
-    batches.length === 1
-      ? batches[0].summary
-      : batches.map((b, i) => `Batch ${i + 1}: ${b.summary}`).join("\n");
+  const summary = mergeSummaries(batches.map((b) => b.summary));
 
   return {
     repo: input.repoLabel,

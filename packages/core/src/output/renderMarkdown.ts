@@ -68,7 +68,7 @@ export function renderMarkdown(report: ReviewReport): string {
 }
 
 export function renderTerminalSummary(report: ReviewReport): string {
-  const top = report.findings.slice(0, 8);
+  const top = report.findings.slice(0, 5);
   const more =
     report.findings.length > top.length
       ? `\n…and ${report.findings.length - top.length} more findings (see --out / --json).`
